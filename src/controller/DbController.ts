@@ -1,5 +1,6 @@
 import { Game, GameInitialData } from 'models/game.model';
 import { Room } from 'models/room.model';
+import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
 
 export class DbController {
@@ -90,5 +91,11 @@ export class DbController {
       idPlayer: id,
     };
     return game;
+  }
+
+  addShips(gameId: number, playerId: number, ships: Ship[]) {
+    console.log('gameId:', gameId);
+    console.log('playerId:', playerId);
+    console.log('ships:', ships);
   }
 }
