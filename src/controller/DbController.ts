@@ -1,11 +1,11 @@
-import { log } from 'console';
+import { Game, GameInitialData } from 'models/game.model';
 import { Room } from 'models/room.model';
 import { User } from 'models/user.model';
 
 export class DbController {
   public users: User[];
   public rooms: Room[];
-  public games: User[];
+  public games: Game[];
 
   constructor() {
     this.users = [];
@@ -70,27 +70,25 @@ export class DbController {
       };
       this.rooms.push(data);
     }
-    return {
-      type: 'update_room',
-      data: JSON.stringify(this.rooms),
-      id: 0,
-    };
+    return this.rooms;
   }
 
   addUserToRoom(roomId: number, connectionId: number) {
-    console.log(roomId === connectionId);
     if (roomId !== connectionId) {
-      const foundedRoom = this.rooms.find((item) => item.roomId === connectionId);
-      console.log(this.rooms);
-      if (foundedRoom) {
-        this.rooms.splice(this.rooms.indexOf(foundedRoom), 1);
+      const foundedRoom = this.rooms.find((item) => item.roomId === roomId);
+      const foundedUser = this.users.find((item) => item.index === connectionId);
+      if (foundedRoom && foundedUser && foundedRoom.roomUsers.length < 2) {
+        foundedRoom?.roomUsers.push({ name: foundedUser.name, index: connectionId });
+        return { host: roomId, client: connectionId, isOnline: true };
       }
-      const hostRoom = this.rooms.find((item) => item.roomId === roomId);
-      console.log(hostRoom);
-      if (hostRoom) {
-        this.rooms.splice(this.rooms.indexOf(hostRoom), 1);
-      }
-      return { host: roomId, client: connectionId, isOnline: true };
     }
+  }
+
+  createGame(gameData: GameInitialData, id: number) {
+    const game = {
+      idGame: gameData.indexRoom,
+      idPlayer: id,
+    };
+    return game;
   }
 }

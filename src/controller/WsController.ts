@@ -22,7 +22,10 @@ export class WsController {
       this.id += 1;
       this.clients.set(this.id.toString(), client);
       client.on('message', (request) => {
-        this.game.messageHandler(this.id, request);
+        const currentId = this.getKey(client);
+        if (currentId) {
+          this.game.messageHandler(Number(currentId), request);
+        }
       });
     });
   }
@@ -30,5 +33,9 @@ export class WsController {
   public send(id: number, message: string) {
     const client = this.clients.get(id.toString());
     client?.send(message);
+  }
+
+  private getKey(client: WebSocket) {
+    return [...this.clients.keys()].find((key) => this.clients.get(key) === client);
   }
 }
