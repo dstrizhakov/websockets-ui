@@ -47,7 +47,7 @@ export class GameControler {
         this.updateRoom();
         break;
       case 'add_ships':
-        this.addShips(data, parsed.indexPlayer);
+        this.addShips(data, data.indexPlayer);
         break;
     }
   }
