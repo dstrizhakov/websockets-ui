@@ -1,4 +1,5 @@
 import { Game, GameInitialData } from 'models/game.model';
+import { RegData } from 'models/request.model';
 import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
@@ -14,9 +15,9 @@ export class DbController {
     this.games = [];
   }
 
-  init() {}
+  init() { }
 
-  reg(connectionId: number, user: User) {
+  reg(connectionId: number, user: RegData) {
     const foundedUser = this.users.find((item) => item.name === user.name);
     let isError;
     let errorText;

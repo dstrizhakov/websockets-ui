@@ -1,6 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { randomUUID } from 'crypto';
 import { GameControler } from './GameController';
+import { GameRequest } from 'models/request.model';
 
 export class WsController {
   private port: number;
@@ -23,8 +24,9 @@ export class WsController {
       this.clients.set(this.id.toString(), client);
       client.on('message', (request) => {
         const currentId = this.getKey(client);
-        if (currentId) {
-          this.game.messageHandler(Number(currentId), request);
+        const parsed = this.game.deepParse(request.toString()) as GameRequest;
+        if (currentId && parsed) {
+          this.game.messageHandler(Number(currentId), parsed);
         }
       });
     });

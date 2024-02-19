@@ -1,9 +1,7 @@
-import { RawData } from 'ws';
 import { DbController } from './DbController';
 import { WsController } from './WsController';
-import { User } from 'models/user.model';
-import { log } from 'console';
 import { GameInitialData } from 'models/game.model';
+import { GameRequest, RegData } from 'models/request.model';
 
 export class GameControler {
   private ws: WsController | null;
@@ -26,11 +24,10 @@ export class GameControler {
     }
   }
 
-  messageHandler(id: number, request: RawData) {
-    const parsed = this.deepParse(request.toString());
-    if (!parsed) return;
-    console.log('messageHandler: ', parsed);
-    const { type, data } = parsed;
+  messageHandler(id: number, request: GameRequest) {
+    if (!request) return;
+    console.log('messageHandler: ', request);
+    const { type, data } = request;
     switch (type) {
       case 'reg':
         this.reg(id, data);
@@ -47,12 +44,12 @@ export class GameControler {
         this.updateRoom();
         break;
       case 'add_ships':
-        this.addShips(data, data.indexPlayer);
+        this.addShips(data);
         break;
     }
   }
 
-  reg(conectionId: number, user: User) {
+  reg(conectionId: number, user: RegData) {
     const response = this.db?.reg(conectionId, user);
     this.ws?.send(conectionId, JSON.stringify(response));
   }
@@ -88,8 +85,8 @@ export class GameControler {
     });
   }
 
-  addShips(data: any, indexPlayer: number) {
-    this.db?.addShips(data.gameId, indexPlayer, data.ships);
+  addShips(data: any) {
+    this.db?.addShips(data.gameId, data.indexPlayer, data.ships);
   }
 
   deepParse(request: string) {
