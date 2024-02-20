@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
-import { randomUUID } from 'crypto';
 import { GameControler } from './GameController';
 import { GameRequest } from 'models/request.model';
+import { log } from 'console';
 
 export class WsController {
   private port: number;
@@ -19,17 +19,28 @@ export class WsController {
   }
 
   public init() {
-    this.wss.on('connection', (client) => {
-      this.id += 1;
-      this.clients.set(this.id.toString(), client);
-      client.on('message', (request) => {
-        const currentId = this.getKey(client);
-        const parsed = this.game.deepParse(request.toString()) as GameRequest;
-        if (currentId && parsed) {
-          this.game.messageHandler(Number(currentId), parsed);
-        }
+    this.wss
+      .on('connection', (client) => {
+        this.id += 1;
+        this.clients.set(this.id.toString(), client);
+        console.log('connection, id :', this.id);
+        client.on('message', (request) => {
+          const currentId = this.getKey(client);
+          const parsed = this.game.deepParse(request.toString()) as GameRequest;
+          if (currentId && parsed) {
+            this.game.messageHandler(Number(currentId), parsed);
+          }
+        });
+      })
+      .on('close', () => {
+        console.log('close... current id = ', this.id);
+      })
+      .on('headers', (headers) => {
+        console.log(headers.find((header) => header.startsWith('Sec-WebSocket-Accept')));
+      })
+      .on('error', (error) => {
+        console.log(error);
       });
-    });
   }
 
   public send(id: number, message: string) {

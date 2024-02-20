@@ -6,7 +6,7 @@ export interface RegData {
 }
 export interface AddShipsData {
   gameId: number;
-  playerIndex: number;
+  indexPlayer: number;
   ships: Ship[];
 }
 export interface AddUserToRoomData {

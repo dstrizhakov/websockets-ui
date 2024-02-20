@@ -1,5 +1,6 @@
-import { Game, GameInitialData } from 'models/game.model';
-import { RegData } from 'models/request.model';
+import { log } from 'console';
+import { Game, GameData, GameInitialData } from 'models/game.model';
+import { AddShipsData, AddUserToRoomData, RegData } from 'models/request.model';
 import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
@@ -15,7 +16,7 @@ export class DbController {
     this.games = [];
   }
 
-  init() { }
+  init() {}
 
   reg(connectionId: number, user: RegData) {
     const foundedUser = this.users.find((item) => item.name === user.name);
@@ -75,7 +76,8 @@ export class DbController {
     return this.rooms;
   }
 
-  addUserToRoom(roomId: number, connectionId: number) {
+  addUserToRoom(data: AddUserToRoomData, connectionId: number) {
+    const roomId = data?.indexRoom;
     if (roomId !== connectionId) {
       const foundedRoom = this.rooms.find((item) => item.roomId === roomId);
       const foundedUser = this.users.find((item) => item.index === connectionId);
@@ -86,17 +88,43 @@ export class DbController {
     }
   }
 
-  createGame(gameData: GameInitialData, id: number) {
+  createGame(data: GameInitialData, id: number) {
     const game = {
-      idGame: gameData.indexRoom,
+      idGame: data.indexRoom,
       idPlayer: id,
     };
+    this.games.push({
+      idGame: data.indexRoom,
+      hostId: id,
+      clientId: id,
+      isOnline: true,
+      data: [],
+    });
     return game;
   }
 
-  addShips(gameId: number, playerId: number, ships: Ship[]) {
-    console.log('gameId:', gameId);
-    console.log('playerId:', playerId);
-    console.log('ships:', ships);
+  addShips(data: AddShipsData, clientId: number) {
+    const currentGame = this.games.find((game) => game.idGame === data.gameId);
+    if (currentGame) {
+      const emptyGrid: number[][] = Array(10)
+        .fill(0)
+        .map(() => Array(10).fill(0));
+
+      (currentGame.data as Array<GameData>).push({
+        indexPlayer: clientId,
+        ships: data.ships,
+        grid: emptyGrid,
+      });
+
+      if (currentGame.data.length >= 2) {
+        return currentGame;
+      }
+    }
+
+    console.log('currentGame: ', currentGame);
+  }
+
+  getAvailableRooms() {
+    return this.rooms.filter((room) => room.roomUsers.length < 2);
   }
 }

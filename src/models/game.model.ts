@@ -1,18 +1,16 @@
 import { Ship } from './ship.model';
 
-type data =
-  | {
-      indexPlayer: number;
-      ships: Ship[];
-      grid: number[][];
-    }[]
-  | [];
+export interface GameData {
+  indexPlayer: number;
+  ships: Ship[];
+  grid: number[][];
+}
 
 export interface Game {
   idGame: number;
   hostId: number;
   clientId: number;
-  data: data;
+  data: GameData[] | [];
   turn?: number;
   isOnline: boolean;
 }
