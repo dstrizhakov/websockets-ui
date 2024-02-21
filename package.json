@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "start": "node ./index.ts",
-        "start:dev": "nodemon ./index.ts",
+        "start:dev": "env $(cat .env) nodemon ./index.ts",
         "start:prod": "tcs && node dist/index.js",
         "test": "jest --passWithNoTests",
         "format": "prettier --write \"src/**/*.ts\"",

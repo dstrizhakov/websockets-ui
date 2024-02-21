@@ -1,19 +1,23 @@
-import { WebSocket, WebSocketServer } from 'ws';
+import { CloseEvent, MessageEvent, WebSocket, WebSocketServer } from 'ws';
 import { GameControler } from './GameController';
 import { GameRequest } from 'models/request.model';
-import { log } from 'console';
+
+
+export interface WebSocketClient extends WebSocket {
+  id?: number;
+}
 
 export class WsController {
   private port: number;
   private wss: WebSocketServer;
-  public clients: Map<string, WebSocket>;
+  public clients: Map<string, WebSocketClient>;
   private game: GameControler;
   private id: number;
 
   constructor(port: number, game: GameControler) {
     this.port = port;
     this.wss = new WebSocketServer({ port });
-    this.clients = new Map<string, WebSocket>();
+    this.clients = new Map<string, WebSocketClient>();
     this.game = game;
     this.id = 0;
   }
@@ -21,10 +25,11 @@ export class WsController {
   public init() {
     this.wss
       .on('connection', (client) => {
+        const webSocketClient: WebSocketClient = client;
+        webSocketClient.id = this.id
+        this.clients.set(this.id.toString(), webSocketClient);
         this.id += 1;
-        this.clients.set(this.id.toString(), client);
-        console.log('connection, id :', this.id);
-        client.on('message', (request) => {
+        client.on('message', (request: MessageEvent) => {
           const currentId = this.getKey(client);
           const parsed = this.game.deepParse(request.toString()) as GameRequest;
           if (currentId && parsed) {
@@ -32,13 +37,13 @@ export class WsController {
           }
         });
       })
-      .on('close', () => {
-        console.log('close... current id = ', this.id);
+      .on('open', (event: Event) => {
+        console.log('open... event = ', event);
       })
-      .on('headers', (headers) => {
-        console.log(headers.find((header) => header.startsWith('Sec-WebSocket-Accept')));
+      .on('close', (event: CloseEvent) => {
+        console.log('close... current id = ', this.getKey(event.target));
       })
-      .on('error', (error) => {
+      .on('error', (error: Error) => {
         console.log(error);
       });
   }

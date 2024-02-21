@@ -3,6 +3,7 @@ import { DbController } from './DbController';
 import { WsController } from './WsController';
 import { GameInitialData } from 'models/game.model';
 import { AddShipsData, AddUserToRoomData, GameRequest, RegData } from 'models/request.model';
+import { Ship } from 'models/ship.model';
 
 export class GameControler {
   private ws: WsController | null;
@@ -13,13 +14,13 @@ export class GameControler {
     this.db = null;
   }
 
-  public init() {
-    const WSS_PORT = Number(process.env.WSS_PORT || 3000);
+  public init(WSS_PORT: number) {
     this.ws = new WsController(WSS_PORT, this);
     this.db = new DbController();
     if (this.ws && this.db) {
       this.ws.init();
       this.db.init();
+      console.log(`Start web socket connection on the ${WSS_PORT} port!`);
     } else {
       console.error('WebSocket or Database controller is not initialized properly.');
     }
@@ -103,6 +104,39 @@ export class GameControler {
       });
     }
   }
+
+  generateShipsCells(ships: Ship[]) {
+    return ships.map((ship) => {
+      ship.shipCells = [];
+      ship.isKilled = false;
+      for (let i = 0; i < ship.length; i++) {
+        ship.shipCells.push({
+          y: ship.direction ? ship.position.y + i : ship.position.y,
+          x: ship.direction ? ship.position.x : ship.position.x + i,
+          status: 1,
+        });
+      }
+      return ship;
+    });
+  }
+
+  generateEmptyGrid() {
+    return Array(10).map(() => Array(10).fill(0)) as number[][];
+  }
+
+  // generateGrid(ships: Ship[]) {
+  //   const grid = this.generateEmptyGrid();
+
+  //   ships.forEach((ship) => {
+  //     for (let i = 0; i < ship.length; i++) {
+  //       grid[ship.direction ? ship.position.y + i : ship.position.y][
+  //         ship.direction ? ship.position.x : ship.position.x + i
+  //       ] = 1;
+  //     }
+  //   });
+
+  //   return grid;
+  // }
 
   deepParse(request: string) {
     const data = JSON.parse(request);

@@ -9,6 +9,6 @@ httpServer.listen(HTTP_PORT, () => {
 });
 
 const game = new GameControler();
-game.init()
+game.init(WSS_PORT)
 
 
