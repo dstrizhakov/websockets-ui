@@ -58,6 +58,12 @@ export interface RandomAttack {
   id: 0;
 }
 
-export type Type = 'reg' | 'create_room' | 'add_user_to_room' | 'add_ships' | 'attack' | 'randomAttack';
+export interface SinglePlay {
+  type: 'single_play';
+  data: '';
+  id: 0;
+}
 
-export type GameRequest = RegReq | CreateRoomReq | AddShipsReq | AddUserToRoomReq | Attack | RandomAttack;
+export type Type = 'reg' | 'create_room' | 'add_user_to_room' | 'add_ships' | 'attack' | 'randomAttack' | 'single_play';
+
+export type GameRequest = RegReq | CreateRoomReq | AddShipsReq | AddUserToRoomReq | Attack | RandomAttack | SinglePlay;

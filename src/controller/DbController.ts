@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
+import { mockShips } from '../mockShips';
 
 export class DbController {
   public users: User[];
@@ -92,17 +93,29 @@ export class DbController {
   }
 
   createGame(data: GameInitialData) {
+    console.log('createGame data: ', data);
     const currentRoom = this.rooms.find((room) => room.roomId === data.indexRoom);
-    if (!currentRoom) return;
-    const game = {
-      idGame: data.indexRoom,
-      hostId: currentRoom?.roomUsers[0].index,
-      clientId: currentRoom?.roomUsers[1].index,
-      isOnline: true,
-      data: [],
-    };
-    this.games.push(game);
-    return game;
+    if (currentRoom) {
+      const game = {
+        idGame: data.indexRoom,
+        hostId: currentRoom?.roomUsers[0].index,
+        clientId: currentRoom?.roomUsers[1].index,
+        isOnline: true,
+        data: [],
+      };
+      this.games.push(game);
+      return game;
+    } else {
+      const game = {
+        idGame: data.indexRoom,
+        hostId: data.indexRoom,
+        clientId: -1,
+        isOnline: false,
+        data: [],
+      };
+      this.games.push(game);
+      return game;
+    }
   }
 
   addShips(data: AddShipsData, clientId: number) {
@@ -116,9 +129,15 @@ export class DbController {
       if (currentGame.data.length === 1) {
         currentGame.hostId = clientId;
       }
-
+      if (!currentGame.isOnline) {
+        (currentGame.data as Array<GameData>).push({
+          indexPlayer: -1,
+          ships: this.generateShipsCells(mockShips),
+          grid: this.generateGrid(mockShips),
+        });
+      }
       if (currentGame.data.length === 2) {
-        currentGame.clientId = clientId;
+        currentGame.clientId = currentGame.isOnline ? clientId : -1;
         currentGame.turn = currentGame.data[0].indexPlayer;
         return currentGame;
       }

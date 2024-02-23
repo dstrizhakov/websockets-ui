@@ -31,7 +31,7 @@ export class GameControler {
   }
 
   messageHandler(clientId: number, request: GameRequest) {
-    if (!request) return;
+    if (!request) return
     const { type, data } = request;
     switch (type) {
       case 'reg':
@@ -45,7 +45,7 @@ export class GameControler {
         break;
       case 'add_user_to_room':
         this.addUserToRoom(data, clientId);
-        this.createGame(data, clientId);
+        this.createGame(data);
         this.updateRoom();
         break;
       case 'add_ships':
@@ -56,6 +56,9 @@ export class GameControler {
         break;
       case 'randomAttack':
         this.randomAttack(data);
+        break;
+      case 'single_play':
+        this.createGame({ indexRoom: clientId });
         break;
     }
   }
@@ -89,15 +92,23 @@ export class GameControler {
     });
   }
 
-  createGame(data: GameInitialData, id: number) {
+  createGame(data: GameInitialData) {
     const game = this.db?.createGame(data);
     if (!game) return;
     const currentRoom = this.db?.rooms.find((room) => room.roomId === data.indexRoom);
-    currentRoom?.roomUsers.forEach((user) => {
-      const client = this.ws?.clients.get(user.index.toString());
-      const response = { idGame: game?.idGame, idPlayer: user.index };
+    if (currentRoom) {
+      //game in room
+      currentRoom.roomUsers.forEach((user) => {
+        const client = this.ws?.clients.get(user.index.toString());
+        const response = { idGame: game?.idGame, idPlayer: user.index };
+        client?.send(JSON.stringify({ type: 'create_game', data: JSON.stringify(response), id: 0 }));
+      });
+    } else {
+      // single play
+      const client = this.ws?.clients.get(game.hostId.toString());
+      const response = { idGame: game?.idGame, idPlayer: game.hostId };
       client?.send(JSON.stringify({ type: 'create_game', data: JSON.stringify(response), id: 0 }));
-    });
+    }
   }
 
   addShips(data: AddShipsData, clientId: number) {
@@ -115,6 +126,13 @@ export class GameControler {
       const turnData = this.db?.turn(game.idGame);
       const turnResponse = JSON.stringify({ type: 'turn', data: JSON.stringify(turnData), id: 0 });
       this.ws?.sendToPlayers(game.hostId, game.clientId, turnResponse, turnResponse);
+
+      const currentGame = this.db?.games.find((game) => game.idGame === clientId);
+      if (!currentGame) return;
+
+      if (!currentGame.isOnline && currentGame.turn === -1) {
+        this.botAttack(game);
+      }
     }
   }
 
@@ -132,6 +150,10 @@ export class GameControler {
       const turnData = this.db?.turn(currentGame.idGame);
       const turnResponse = JSON.stringify({ type: 'turn', data: JSON.stringify(turnData), id: 0 });
       this.ws?.sendToPlayers(game.hostId, game.clientId, turnResponse, turnResponse);
+    }
+
+    if (!currentGame.isOnline && currentGame.turn === -1) {
+      this.botAttack(currentGame);
     }
 
     const winPlayer = this.checkWinPlayer(currentGame);
@@ -161,6 +183,25 @@ export class GameControler {
     const attackData = this.db?.randomAttack(data);
     if (!attackData) return;
     this.attack(attackData);
+  }
+
+  botAttack(game: Game) {
+    const client = this.ws?.clients.get(game.hostId.toString());
+    if (client) {
+      setTimeout(() => {
+        client.emit(
+          'message',
+          JSON.stringify({
+            type: 'randomAttack',
+            data: JSON.stringify({
+              gameId: game?.idGame,
+              indexPlayer: game?.clientId,
+            }),
+            id: 0,
+          }),
+        );
+      }, 100);
+    }
   }
 
   finish(gameId: number, winPlayer: number | string) {
