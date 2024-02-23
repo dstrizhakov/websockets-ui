@@ -1,6 +1,6 @@
 import { DbController } from './DbController';
 import { WsController } from './WsController';
-import { GameInitialData } from 'models/game.model';
+import { Game, GameInitialData } from 'models/game.model';
 import {
   AddShipsData,
   AddUserToRoomData,
@@ -9,7 +9,6 @@ import {
   RandomAttackData,
   RegData,
 } from 'models/request.model';
-import { Ship } from 'models/ship.model';
 
 export class GameControler {
   private ws: WsController | null;
@@ -25,16 +24,14 @@ export class GameControler {
     this.db = new DbController();
     if (this.ws && this.db) {
       this.ws.init();
-      this.db.init();
       console.log(`Start web socket connection on the ${WSS_PORT} port!`);
     } else {
-      console.error('WebSocket or Database controller is not initialized properly.');
+      console.error('WebSocket controller is not initialized properly.');
     }
   }
 
   messageHandler(clientId: number, request: GameRequest) {
     if (!request) return;
-    console.log('messageHandler: ', request);
     const { type, data } = request;
     switch (type) {
       case 'reg':
@@ -136,12 +133,42 @@ export class GameControler {
       const turnResponse = JSON.stringify({ type: 'turn', data: JSON.stringify(turnData), id: 0 });
       this.ws?.sendToPlayers(game.hostId, game.clientId, turnResponse, turnResponse);
     }
+
+    const winPlayer = this.checkWinPlayer(currentGame);
+
+    if (winPlayer !== undefined) {
+      this.finish(currentGame.idGame, winPlayer);
+      this.updateWinners();
+    }
+  }
+
+  checkWinPlayer(game: Game): number | undefined {
+    let winPlayer: undefined | number;
+    let loosePlayer: undefined | number;
+    game.data.forEach((item) => {
+      const killedCount = item.grid.flat(2).reduce((acc, target) => (target === 4 ? acc + 1 : acc), 0);
+      if (killedCount === 20) {
+        loosePlayer = item.indexPlayer;
+      }
+    });
+    if (loosePlayer !== undefined) {
+      winPlayer = game.data.find((item) => item.indexPlayer !== loosePlayer)?.indexPlayer;
+    }
+    return winPlayer;
   }
 
   randomAttack(data: RandomAttackData) {
     const attackData = this.db?.randomAttack(data);
     if (!attackData) return;
     this.attack(attackData);
+  }
+
+  finish(gameId: number, winPlayer: number | string) {
+    const currentGame = this.db?.games.find((game) => game.idGame === gameId);
+    if (!currentGame) return;
+    const response = this.db?.finish(gameId, winPlayer);
+    const finishData = JSON.stringify({ type: 'finish', data: JSON.stringify(response), id: 0 });
+    this.ws?.sendToPlayers(currentGame.hostId, currentGame.clientId, finishData, finishData);
   }
 
   deepParse(request: string) {

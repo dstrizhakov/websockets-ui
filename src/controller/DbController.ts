@@ -15,8 +15,6 @@ export class DbController {
     this.games = [];
   }
 
-  init() {}
-
   reg(connectionId: number, user: RegData) {
     const foundedUser = this.users.find((item) => item.name === user.name);
     let isError;
@@ -120,7 +118,7 @@ export class DbController {
       }
     }
   }
-
+  // 1-hidden 2-miss 3-shot 4-killed
   attack(data: AttackData) {
     const currentGame = this.games.find((game) => game.idGame === data.gameId);
     if (currentGame?.turn === data.indexPlayer) {
@@ -248,7 +246,14 @@ export class DbController {
     };
   }
 
-  attackResponse(x: number, y: number, indexPlayer: number, status: 'miss' | 'killed' | 'shot') {}
+  finish(gameId: number, winPlayer: number | string) {
+    const currentGame = this.games.find((game) => game.idGame === gameId);
+    if (!currentGame) return;
+    const winner = this.users.find((user) => user.index === winPlayer);
+    winner?.wins !== undefined && winner.wins++; // добавляем кол-во побед
+    this.rooms.filter((room) => room.roomId !== gameId); // удаляем комнату, так как игра завершена
+    return { winPlayer };
+  }
 
   generateShipsCells(ships: Ship[]) {
     return ships.map((ship) => {
