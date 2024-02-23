@@ -90,7 +90,7 @@ export class GameControler {
   }
 
   createGame(data: GameInitialData, id: number) {
-    const game = this.db?.createGame(data, id);
+    const game = this.db?.createGame(data);
     if (!game) return;
     const currentRoom = this.db?.rooms.find((room) => room.roomId === data.indexRoom);
     currentRoom?.roomUsers.forEach((user) => {

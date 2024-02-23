@@ -1,5 +1,6 @@
 import { Game, GameData, GameInitialData } from 'models/game.model';
 import { AddShipsData, AddUserToRoomData, AttackData, RandomAttackData, RegData } from 'models/request.model';
+import { createHash } from 'node:crypto';
 import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
@@ -15,7 +16,11 @@ export class DbController {
     this.games = [];
   }
 
-  reg(connectionId: number, user: RegData) {
+  private generateHash(string: string) {
+    return createHash('sha256').update(string).digest('hex');
+  }
+
+  public reg(connectionId: number, user: RegData) {
     const foundedUser = this.users.find((item) => item.name === user.name);
     let isError;
     let errorText;
@@ -27,12 +32,12 @@ export class DbController {
         this.users.push({
           index: connectionId,
           name: user.name,
-          password: user.password,
+          password: this.generateHash(user.password),
           wins: 0,
         });
       }
     } else {
-      if (foundedUser?.password === user?.password) {
+      if (foundedUser?.password === this.generateHash(user.password)) {
         isError = false;
         errorText = '';
       } else {
@@ -75,6 +80,7 @@ export class DbController {
 
   addUserToRoom(data: AddUserToRoomData, connectionId: number) {
     const roomId = data?.indexRoom;
+    //игрок создавший комнату не может присоединиться так как он там уже есть
     if (roomId !== connectionId) {
       const foundedRoom = this.rooms.find((item) => item.roomId === roomId);
       const foundedUser = this.users.find((item) => item.index === connectionId);
@@ -85,7 +91,7 @@ export class DbController {
     }
   }
 
-  createGame(data: GameInitialData, id: number) {
+  createGame(data: GameInitialData) {
     const currentRoom = this.rooms.find((room) => room.roomId === data.indexRoom);
     if (!currentRoom) return;
     const game = {
@@ -285,24 +291,6 @@ export class DbController {
         ] = 1;
       }
     });
-    // ships.forEach((ship) => {
-    //   const { x, y } = ship.position;
-    //   const { length, direction } = ship;
-    //   if (direction) {
-    //     for (let i = 0; i < length; i++) {
-    //       if (x + i < 10) {
-    //         grid[y][x + i] = 1;
-    //       }
-    //     }
-    //   } else {
-    //     for (let i = 0; i < length; i++) {
-    //       if (y + i < 10) {
-    //         grid[y + i][x] = 1;
-    //       }
-    //     }
-    //   }
-    // });
-
     return grid;
   }
 
