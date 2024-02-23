@@ -1,8 +1,14 @@
-import { log } from 'console';
 import { DbController } from './DbController';
 import { WsController } from './WsController';
 import { GameInitialData } from 'models/game.model';
-import { AddShipsData, AddUserToRoomData, GameRequest, RegData } from 'models/request.model';
+import {
+  AddShipsData,
+  AddUserToRoomData,
+  AttackData,
+  GameRequest,
+  RandomAttackData,
+  RegData,
+} from 'models/request.model';
 import { Ship } from 'models/ship.model';
 
 export class GameControler {
@@ -47,7 +53,12 @@ export class GameControler {
         break;
       case 'add_ships':
         this.addShips(data, clientId);
-
+        break;
+      case 'attack':
+        this.attack(data);
+        break;
+      case 'randomAttack':
+        this.randomAttack(data);
         break;
     }
   }
@@ -82,11 +93,12 @@ export class GameControler {
   }
 
   createGame(data: GameInitialData, id: number) {
-    console.log('CREATE GAME');
-    const response = this.db?.createGame(data, id);
+    const game = this.db?.createGame(data, id);
+    if (!game) return;
     const currentRoom = this.db?.rooms.find((room) => room.roomId === data.indexRoom);
     currentRoom?.roomUsers.forEach((user) => {
       const client = this.ws?.clients.get(user.index.toString());
+      const response = { idGame: game?.idGame, idPlayer: user.index };
       client?.send(JSON.stringify({ type: 'create_game', data: JSON.stringify(response), id: 0 }));
     });
   }
@@ -94,49 +106,43 @@ export class GameControler {
   addShips(data: AddShipsData, clientId: number) {
     const game = this.db?.addShips(data, clientId);
     if (game) {
-      game.data.forEach((item) => {
+      game.data.forEach((item, index) => {
         const client = this.ws?.clients.get(item.indexPlayer.toString());
         const data = {
-          currentPlayerIndex: item.indexPlayer,
+          currentPlayerIndex: index === 0 ? game.data[0]?.indexPlayer : game.data[1]?.indexPlayer,
           ships: item.ships,
         };
         client?.send(JSON.stringify({ type: 'start_game', data: JSON.stringify(data), id: 0 }));
       });
+
+      const turnData = this.db?.turn(game.idGame);
+      const turnResponse = JSON.stringify({ type: 'turn', data: JSON.stringify(turnData), id: 0 });
+      this.ws?.sendToPlayers(game.hostId, game.clientId, turnResponse, turnResponse);
     }
   }
 
-  generateShipsCells(ships: Ship[]) {
-    return ships.map((ship) => {
-      ship.shipCells = [];
-      ship.isKilled = false;
-      for (let i = 0; i < ship.length; i++) {
-        ship.shipCells.push({
-          y: ship.direction ? ship.position.y + i : ship.position.y,
-          x: ship.direction ? ship.position.x : ship.position.x + i,
-          status: 1,
-        });
-      }
-      return ship;
-    });
+  attack(data: AttackData) {
+    const currentGame = this.db?.games.find((game) => game.idGame === data.gameId);
+    if (!currentGame) return;
+    const responseDb = this.db?.attack(data);
+    if (responseDb) {
+      const { game, responses } = responseDb;
+      responses.forEach((response) => {
+        const attackData = JSON.stringify({ type: 'attack', data: JSON.stringify(response), id: 0 });
+        this.ws?.sendToPlayers(game.hostId, game.clientId, attackData, attackData);
+      });
+
+      const turnData = this.db?.turn(currentGame.idGame);
+      const turnResponse = JSON.stringify({ type: 'turn', data: JSON.stringify(turnData), id: 0 });
+      this.ws?.sendToPlayers(game.hostId, game.clientId, turnResponse, turnResponse);
+    }
   }
 
-  generateEmptyGrid() {
-    return Array(10).map(() => Array(10).fill(0)) as number[][];
+  randomAttack(data: RandomAttackData) {
+    const attackData = this.db?.randomAttack(data);
+    if (!attackData) return;
+    this.attack(attackData);
   }
-
-  // generateGrid(ships: Ship[]) {
-  //   const grid = this.generateEmptyGrid();
-
-  //   ships.forEach((ship) => {
-  //     for (let i = 0; i < ship.length; i++) {
-  //       grid[ship.direction ? ship.position.y + i : ship.position.y][
-  //         ship.direction ? ship.position.x : ship.position.x + i
-  //       ] = 1;
-  //     }
-  //   });
-
-  //   return grid;
-  // }
 
   deepParse(request: string) {
     const data = JSON.parse(request);

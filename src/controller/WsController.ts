@@ -2,7 +2,6 @@ import { CloseEvent, MessageEvent, WebSocket, WebSocketServer } from 'ws';
 import { GameControler } from './GameController';
 import { GameRequest } from 'models/request.model';
 
-
 export interface WebSocketClient extends WebSocket {
   id?: number;
 }
@@ -26,7 +25,7 @@ export class WsController {
     this.wss
       .on('connection', (client) => {
         const webSocketClient: WebSocketClient = client;
-        webSocketClient.id = this.id
+        webSocketClient.id = this.id;
         this.clients.set(this.id.toString(), webSocketClient);
         this.id += 1;
         client.on('message', (request: MessageEvent) => {
@@ -51,6 +50,13 @@ export class WsController {
   public send(id: number, message: string) {
     const client = this.clients.get(id.toString());
     client?.send(message);
+  }
+
+  public sendToPlayers(hostId: number, clientId: number, messageHost: string, messageClient: string) {
+    const host = this.clients.get(hostId.toString());
+    const client = this.clients.get(clientId.toString());
+    host?.send(messageHost);
+    client?.send(messageClient);
   }
 
   private getKey(client: WebSocket) {

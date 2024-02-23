@@ -1,4 +1,4 @@
-import { Ship } from "./ship.model";
+import { Ship } from './ship.model';
 
 export interface RegData {
   name: string;
@@ -13,6 +13,18 @@ export interface AddUserToRoomData {
   indexRoom: number;
 }
 
+export interface AttackData {
+  gameId: number;
+  x: number;
+  y: number;
+  indexPlayer: number;
+}
+
+export interface RandomAttackData {
+  gameId: number;
+  indexPlayer: number;
+}
+
 export interface RegReq {
   type: 'reg';
   data: RegData;
@@ -20,7 +32,7 @@ export interface RegReq {
 }
 
 export interface CreateRoomReq {
-  type: 'create_room',
+  type: 'create_room';
   data: '';
 }
 
@@ -34,6 +46,18 @@ export interface AddShipsReq {
   data: AddShipsData;
 }
 
+export interface Attack {
+  type: 'attack';
+  data: AttackData;
+  id: 0;
+}
 
-export type Type = 'reg' | 'create_room' | 'add_user_to_room' | 'add_ships' | 'attack'
-export type GameRequest = RegReq | CreateRoomReq | AddShipsReq | AddUserToRoomReq
+export interface RandomAttack {
+  type: 'randomAttack';
+  data: RandomAttackData;
+  id: 0;
+}
+
+export type Type = 'reg' | 'create_room' | 'add_user_to_room' | 'add_ships' | 'attack' | 'randomAttack';
+
+export type GameRequest = RegReq | CreateRoomReq | AddShipsReq | AddUserToRoomReq | Attack | RandomAttack;
