@@ -1,6 +1,6 @@
-import { User } from "./user.model";
+import { User } from './user.model';
 
 export interface Room {
-    roomId: number;
-    roomUsers: User[];
-  }
+  roomId: number;
+  roomUsers: User[];
+}
