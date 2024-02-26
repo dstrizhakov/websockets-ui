@@ -5,7 +5,6 @@ import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
 import { mockShips } from '../mockShips';
-import { log } from 'node:console';
 
 export class DbController {
   public users: User[];
@@ -280,7 +279,7 @@ export class DbController {
     const winner = this.users.find((user) => user.index === winPlayer);
     winner?.wins !== undefined && winner.wins++; // добавляем кол-во побед
     this.rooms = this.rooms.filter((room) => room.roomId !== gameId); // удаляем комнату, так как игра завершена
-    this.games = this.games.filter(game => game.idGame !== gameId); //удаляем игру
+    this.games = this.games.filter((game) => game.idGame !== gameId); //удаляем игру
     return { winPlayer };
   }
 
@@ -318,8 +317,8 @@ export class DbController {
   }
 
   endGame(playerId: number) {
-    this.rooms = this.rooms.filter(room => !room.roomUsers.find(user => user.index === playerId));
-    this.games = this.games.filter(game => game.clientId !== playerId && game.hostId !== playerId);
+    this.rooms = this.rooms.filter((room) => !room.roomUsers.find((user) => user.index === playerId));
+    this.games = this.games.filter((game) => game.clientId !== playerId && game.hostId !== playerId);
   }
 
   getAvailableRooms() {

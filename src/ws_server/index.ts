@@ -1,7 +1,7 @@
-import { CloseEvent, MessageEvent, WebSocket, WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
 export interface WebSocketClient extends WebSocket {
-    id?: number;
+  id?: number;
 }
 
 const port = Number(process.env.WSS_PORT || 3000);

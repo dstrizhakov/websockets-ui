@@ -31,7 +31,7 @@ export class GameControler {
   }
 
   messageHandler(clientId: number, request: GameRequest) {
-    if (!request) return
+    if (!request) return;
     const { type, data } = request;
     switch (type) {
       case 'reg':
