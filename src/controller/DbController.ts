@@ -29,7 +29,7 @@ export class DbController {
     if (!foundedUser) {
       if (!/^[a-zA-Z\-]+$/.test(user.name)) {
         isError = true;
-        errorText = 'Name must contain only letters';
+        errorText = 'Логин может содержать только латинские буквы';
       } else {
         this.users.push({
           index: connectionId,
@@ -44,7 +44,7 @@ export class DbController {
         errorText = '';
       } else {
         isError = true;
-        errorText = 'Wrong password';
+        errorText = 'Логин или пароль введен не верно';
       }
     }
 
@@ -143,7 +143,7 @@ export class DbController {
       }
     }
   }
-  // 1-hidden 2-miss 3-shot 4-killed
+
   attack(data: AttackData) {
     const currentGame = this.games.find((game) => game.idGame === data.gameId);
     if (currentGame?.turn === data.indexPlayer) {

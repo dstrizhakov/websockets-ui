@@ -25,7 +25,6 @@ export class WsController {
         const webSocketClient: WebSocketClient = client;
         webSocketClient.id = this.id;
         this.clients.set(this.id.toString(), webSocketClient);
-        console.log('New websocket connection id: ', this.id)
         this.id += 1;
         client.on('message', (request: MessageEvent) => {
           const currentId = this.getKey(client);
