@@ -1,3 +1,4 @@
+import { WebSocketServer } from 'ws';
 import { DbController } from './DbController';
 import { WsController } from './WsController';
 import { Game, GameInitialData } from 'models/game.model';
@@ -19,12 +20,11 @@ export class GameControler {
     this.db = null;
   }
 
-  public init(WSS_PORT: number) {
-    this.ws = new WsController(WSS_PORT, this);
+  public init(wss: WebSocketServer) {
+    this.ws = new WsController(wss, this);
     this.db = new DbController();
     if (this.ws && this.db) {
       this.ws.init();
-      console.log(`Start web socket connection on the ${WSS_PORT} port!`);
     } else {
       console.error('WebSocket controller is not initialized properly.');
     }

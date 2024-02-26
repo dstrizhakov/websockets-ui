@@ -7,15 +7,13 @@ export interface WebSocketClient extends WebSocket {
 }
 
 export class WsController {
-  private port: number;
   private wss: WebSocketServer;
   public clients: Map<string, WebSocketClient>;
   private game: GameControler;
   private id: number;
 
-  constructor(port: number, game: GameControler) {
-    this.port = port;
-    this.wss = new WebSocketServer({ port });
+  constructor(wss: WebSocketServer, game: GameControler) {
+    this.wss = wss;
     this.clients = new Map<string, WebSocketClient>();
     this.game = game;
     this.id = 0;
@@ -27,6 +25,7 @@ export class WsController {
         const webSocketClient: WebSocketClient = client;
         webSocketClient.id = this.id;
         this.clients.set(this.id.toString(), webSocketClient);
+        console.log('New websocket connection id: ', this.id)
         this.id += 1;
         client.on('message', (request: MessageEvent) => {
           const currentId = this.getKey(client);

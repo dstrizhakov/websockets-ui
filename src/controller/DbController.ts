@@ -5,6 +5,7 @@ import { Room } from 'models/room.model';
 import { Ship } from 'models/ship.model';
 import { User } from 'models/user.model';
 import { mockShips } from '../mockShips';
+import { log } from 'node:console';
 
 export class DbController {
   public users: User[];
@@ -227,7 +228,7 @@ export class DbController {
   randomAttack(data: RandomAttackData) {
     const currentGame = this.games.find((game) => game.idGame === data.gameId);
     if (!currentGame) return;
-    const currentData = currentGame.data.find((item) => item.indexPlayer === data.indexPlayer);
+    const currentData = currentGame.data.find((item) => item.indexPlayer !== data.indexPlayer);
     if (!currentData) return;
     const { y, x } = this.getRandomCell(currentData.grid);
     const { gameId, indexPlayer } = data;
@@ -240,13 +241,16 @@ export class DbController {
   }
 
   getRandomCell(grid: number[][]): { y: number; x: number } {
-    const randomCell = {
-      y: Math.floor(Math.random() * 10),
-      x: Math.floor(Math.random() * 10),
-    };
-    return grid[randomCell.y][randomCell.x] === 0 || grid[randomCell.y][randomCell.x] === 1
-      ? randomCell
-      : this.getRandomCell(grid);
+    let cell;
+    let cellStatus = 0;
+    do {
+      cell = {
+        x: Math.floor(Math.random() * 10),
+        y: Math.floor(Math.random() * 10),
+      };
+      cellStatus = grid[cell.y][cell.x];
+    } while (cellStatus !== 0 && cellStatus !== 1);
+    return cell;
   }
 
   getMissedCells(grid: number[][], y: number, x: number) {
