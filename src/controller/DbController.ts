@@ -93,7 +93,6 @@ export class DbController {
   }
 
   createGame(data: GameInitialData) {
-    console.log('createGame data: ', data);
     const currentRoom = this.rooms.find((room) => room.roomId === data.indexRoom);
     if (currentRoom) {
       const game = {
@@ -311,6 +310,11 @@ export class DbController {
       }
     });
     return grid;
+  }
+
+  endGame(playerId: number) {
+    this.rooms = this.rooms.filter(room => !room.roomUsers.find(user => user.index === playerId));
+    this.games = this.games.filter(game => game.clientId !== playerId && game.hostId !== playerId);
   }
 
   getAvailableRooms() {

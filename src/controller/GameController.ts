@@ -212,6 +212,12 @@ export class GameControler {
     this.ws?.sendToPlayers(currentGame.hostId, currentGame.clientId, finishData, finishData);
   }
 
+  endGame(playerId: number) {
+    this.db?.endGame(playerId);
+    this.updateRoom();
+    this.updateWinners();
+  }
+
   deepParse(request: string) {
     const data = JSON.parse(request);
     for (const property in data) {

@@ -40,7 +40,10 @@ export class WsController {
         console.log('open... event = ', event);
       })
       .on('close', (event: CloseEvent) => {
-        console.log('close... current id = ', this.getKey(event.target));
+        const playerId = this.getKey(event.target);
+        if (playerId) {
+          this.game.endGame(Number(playerId))
+        }
       })
       .on('error', (error: Error) => {
         console.log(error);
