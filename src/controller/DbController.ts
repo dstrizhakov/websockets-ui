@@ -275,7 +275,8 @@ export class DbController {
     if (!currentGame) return;
     const winner = this.users.find((user) => user.index === winPlayer);
     winner?.wins !== undefined && winner.wins++; // добавляем кол-во побед
-    this.rooms.filter((room) => room.roomId !== gameId); // удаляем комнату, так как игра завершена
+    this.rooms = this.rooms.filter((room) => room.roomId !== gameId); // удаляем комнату, так как игра завершена
+    this.games = this.games.filter(game => game.idGame !== gameId); //удаляем игру
     return { winPlayer };
   }
 
